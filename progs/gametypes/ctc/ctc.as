@@ -1087,7 +1087,7 @@ void GT_SpawnGametype()
 void GT_InitGametype()
 {
     gametype.title = "Catch The Chicken !";
-    gametype.version = "0.41";
+    gametype.version = "0.5";
     gametype.author = "Random Warsowian";
 
     // if the gametype doesn't have a config file, create it
