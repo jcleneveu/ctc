@@ -1,0 +1,16 @@
+/shared/constants.as;
+/shared/files.as;
+
+generic/matchstates.as;
+generic/bots.as;
+generic/items.as;
+ctc/ctc.as;
+ctc/ctc_ctfspawn.as;
+
+legacy/quake1.as;
+
+legacy/quake1_items.as;
+legacy/quake2_items.as;
+legacy/quake3_items.as;
+
+legacy_items.as;

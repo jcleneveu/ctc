@@ -1,0 +1,23 @@
+Capture the chicken is a gametype for the free fps Warsow.
+
+This gametype is coded in Angelscript, a scripting language
+used by Warsow since version 0.5 to allow easy game extensions.
+
+In Capture the chicken, two teams fight against each other to possess
+the chicken: the team possessing the chicken will earn one point every three
+seconds. Of course, when the chicken carrier dies, he drops the chicken on the
+floor. It is also possible to pass the chicken to any of your team member.
+
+Content
+=======
+
+The Angelscript code is located in the 'progs' directory. The other directories
+contain media files for the gametype.
+
+Install
+=======
+
+Just copy all the files to your basewsw directory. You can also use the
+Makefile to create a pure pk3 (this pk3 will be automatically downloaded to
+connecting clients if the server running the gametype has set the sv_pure variable
+to 1).
