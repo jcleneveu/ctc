@@ -1,6 +1,6 @@
 /**
  * Copyright (C) 2010-2011 Seeming
- * A big thanks to Hylith and Zaran for their help and their support !
+ * A big thanks to Hylith trxxrt and Zaran for their help and their support !
  *
  * This program is free software; you can redistribute it and/or
  * it under the terms of the GNU General Public License as published by
@@ -23,6 +23,7 @@
  * based on the "flag's code" of "The Runner" by DrahtMaul
  */
 
+ // variables <int>
 int prcYesIcon;
 int prcShockIcon;
 int prcShellIcon;
@@ -34,12 +35,22 @@ int prcAnnouncerChickenDrop;
 int prcAnnouncerPhilippe;
 int prcAnnouncerPrecoce;
 int prcAnnouncerPatron;
+int announcesNumber = 0;
+uint lastAnnounceTime = 0;
+uint antiSimultaneousAnnounces = 0;
+
+// constantes
+const int MAX_NB_ANNOUNCER_ALLOWED = 3; // max number of crap sounds before, we consider it is spam
+const uint NB_ANNOUNCER_TIMEOUT = 10000; // timeout of spam protection
 const int RUN_SCOREINTERVAL = 3000;
 const float chickenDropDistance = 2.5;
+
+// Cvars
 Cvar dmAllowPickup( "dm_allowPickup", "0", CVAR_ARCHIVE );
 Cvar dmAllowPowerups( "dm_allowPowerups", "1", CVAR_ARCHIVE );
 Cvar dmAllowPowerupDrop( "dm_powerupDrop", "1", CVAR_ARCHIVE );
 
+// touch function of chicken entity
 void chicken_touch( cEntity @ent, cEntity @other, const Vec3 planeNormal, int surfchickens )
 {
     if ( @other == null || @other.client == null )
@@ -51,17 +62,19 @@ void chicken_touch( cEntity @ent, cEntity @other, const Vec3 planeNormal, int su
     chicken.setCarrier( other );
 }
 
+// die function of chicken entity
 void chicken_die( cEntity @ent, cEntity @inflicter, cEntity @attacker )
 {
     chicken.spawn();
 }
 
+// think function of chicken entity
 void chicken_think( cEntity @ent )
 {
     chicken.spawn();
 }
 
-
+// chicken class
 class Chicken
 {
     cEntity @carrier;
@@ -211,30 +224,30 @@ class Chicken
             }
             else
             {
-		  this.carrier.client.inventoryGiveItem( WEAP_GUNBLADE );
+                  this.carrier.client.inventoryGiveItem( WEAP_GUNBLADE );
                   if( ! dmAllowPickup.boolean )
                   {
-			cItem @item;
-			cItem @ammoItem;
+                        cItem @item;
+                        cItem @ammoItem;
                         
                         // give all weapons
-			for ( int i = WEAP_GUNBLADE + 1; i < WEAP_TOTAL; i++ )
-			{
-			    if ( i == WEAP_INSTAGUN ) // dont add instagun...
-				continue;
+                        for ( int i = WEAP_GUNBLADE + 1; i < WEAP_TOTAL; i++ )
+                        {
+                            if ( i == WEAP_INSTAGUN ) // dont add instagun...
+                                continue;
 
-			    this.carrier.client.inventoryGiveItem( i );
+                            this.carrier.client.inventoryGiveItem( i );
 
-			    @item = @G_GetItem( i );
+                            @item = @G_GetItem( i );
 
-			    @ammoItem = @G_GetItem( item.weakAmmoTag );
-			    if ( @ammoItem != null )
-				this.carrier.client.inventorySetCount( ammoItem.tag, ammoItem.inventoryMax );
+                            @ammoItem = @G_GetItem( item.weakAmmoTag );
+                            if ( @ammoItem != null )
+                                this.carrier.client.inventorySetCount( ammoItem.tag, ammoItem.inventoryMax );
 
-			    @ammoItem = @G_GetItem( item.ammoTag );
-			    if ( @ammoItem != null )
-				this.carrier.client.inventorySetCount( ammoItem.tag, ammoItem.inventoryMax );
-			}
+                            @ammoItem = @G_GetItem( item.ammoTag );
+                            if ( @ammoItem != null )
+                                this.carrier.client.inventorySetCount( ammoItem.tag, ammoItem.inventoryMax );
+                        }
                   }
             }
 
@@ -291,30 +304,30 @@ class Chicken
             }
             else
             {
-		  this.carrier.client.inventoryGiveItem( WEAP_GUNBLADE );
+                  this.carrier.client.inventoryGiveItem( WEAP_GUNBLADE );
                   if( ! dmAllowPickup.boolean )
                   {
-			cItem @item;
-			cItem @ammoItem;
+                        cItem @item;
+                        cItem @ammoItem;
                   
                         // give all weapons
-			for ( int i = WEAP_GUNBLADE + 1; i < WEAP_TOTAL; i++ )
-			{
-			    if ( i == WEAP_INSTAGUN ) // dont add instagun...
-				continue;
+                        for ( int i = WEAP_GUNBLADE + 1; i < WEAP_TOTAL; i++ )
+                        {
+                            if ( i == WEAP_INSTAGUN ) // dont add instagun...
+                                continue;
 
-			    this.carrier.client.inventoryGiveItem( i );
+                            this.carrier.client.inventoryGiveItem( i );
 
-			    @item = @G_GetItem( i );
+                            @item = @G_GetItem( i );
 
-			    @ammoItem = @G_GetItem( item.weakAmmoTag );
-			    if ( @ammoItem != null )
-				this.carrier.client.inventorySetCount( ammoItem.tag, ammoItem.inventoryMax );
+                            @ammoItem = @G_GetItem( item.weakAmmoTag );
+                            if ( @ammoItem != null )
+                                this.carrier.client.inventorySetCount( ammoItem.tag, ammoItem.inventoryMax );
 
-			    @ammoItem = @G_GetItem( item.ammoTag );
-			    if ( @ammoItem != null )
-				this.carrier.client.inventorySetCount( ammoItem.tag, ammoItem.inventoryMax );
-			}
+                            @ammoItem = @G_GetItem( item.ammoTag );
+                            if ( @ammoItem != null )
+                                this.carrier.client.inventorySetCount( ammoItem.tag, ammoItem.inventoryMax );
+                        }
                   }
             }
         this.carrier.client.selectWeapon( -1 );
@@ -500,19 +513,70 @@ bool GT_Command( cClient @client, String &cmdString, String &argsString, int arg
     
     else if ( cmdString == "philippe" )
     {
-        G_AnnouncerSound( null, prcAnnouncerPhilippe, GS_MAX_TEAMS, true, null );
+        if( antiSimultaneousAnnounces < levelTime )
+        {
+             if( announcesNumber < MAX_NB_ANNOUNCER_ALLOWED )
+             {
+                  G_AnnouncerSound( null, prcAnnouncerPhilippe, GS_MAX_TEAMS, false, null );
+                  antiSimultaneousAnnounces = levelTime + 5505;
+                  lastAnnounceTime = levelTime + 5505;
+                  announcesNumber++;
+             }
+             else 
+             {
+                  G_PrintMsg( @client.getEnt(), "STOP SPAM YOU FOOOOOL ! " + ( ( lastAnnounceTime - levelTime + NB_ANNOUNCER_TIMEOUT ) / 1000 ) + " seconds remaining...\n" );
+             }
+        }
+        else 
+        {
+             //G_PrintMsg( @client.getEnt(), "plz wait for crap sound to finish\n" );
+        }
     }
 
     else if ( cmdString == "precoce" )
     {
-        G_AnnouncerSound( null, prcAnnouncerPrecoce, GS_MAX_TEAMS, true, null );
+       if( antiSimultaneousAnnounces < levelTime )
+        {
+             if( announcesNumber < MAX_NB_ANNOUNCER_ALLOWED )
+             {
+                  G_AnnouncerSound( null, prcAnnouncerPrecoce, GS_MAX_TEAMS, false, null );
+                  antiSimultaneousAnnounces = levelTime + 1969;
+                  lastAnnounceTime = levelTime + 1969;
+                  announcesNumber++;
+             }
+             else 
+             {
+                 G_PrintMsg( @client.getEnt(), "STOP SPAM YOU FOOOOOL ! " + ( ( lastAnnounceTime - levelTime + NB_ANNOUNCER_TIMEOUT ) / 1000 ) + " seconds remaining...\n" );
+             }
+        }
+        else 
+        {
+             //G_PrintMsg( @client.getEnt(), "plz wait for crap sound to finish\n" );
+        }
     }
 
     else if ( cmdString == "patron" )
     {
-        G_AnnouncerSound( null, prcAnnouncerPatron, GS_MAX_TEAMS, true, null );
+       if( antiSimultaneousAnnounces < levelTime )
+        {
+             if( announcesNumber < MAX_NB_ANNOUNCER_ALLOWED )
+             {
+                  G_AnnouncerSound( null, prcAnnouncerPatron, GS_MAX_TEAMS, false, null );
+                  antiSimultaneousAnnounces = levelTime + 2636;
+                  lastAnnounceTime = levelTime + 2636;
+                  announcesNumber++;
+             }
+             else 
+             {
+                  G_PrintMsg( @client.getEnt(), "STOP SPAM YOU FOOOOOL ! " + ( ( lastAnnounceTime - levelTime + NB_ANNOUNCER_TIMEOUT ) / 1000 ) + " seconds remaining...\n" );
+             }
+        }
+        else 
+        {
+             //G_PrintMsg( @client.getEnt(), "plz wait for crap sound to finish\n" );
+        }
     }
-
+    
     else if ( cmdString == "help" )
     {
         String response = "";
@@ -885,7 +949,7 @@ void GT_playerRespawn( cEntity @ent, int old_team, int new_team )
         if ( @ammoItem != null )
             ent.client.inventorySetCount( ammoItem.tag, ammoItem.inventoryMax );
 
-        if ( match.getState() <= MATCH_STATE_WARMUP || dmAllowPickup.boolean )
+        if ( match.getState() <= MATCH_STATE_WARMUP || ! dmAllowPickup.boolean )
         {
             ent.client.inventoryGiveItem( ARMOR_YA );
             ent.client.inventoryGiveItem( ARMOR_YA );
@@ -933,7 +997,9 @@ void GT_ThinkRules()
 
     if ( match.getState() >= MATCH_STATE_POSTMATCH )
         return;
-
+        
+    if ( lastAnnounceTime + NB_ANNOUNCER_TIMEOUT < levelTime && announcesNumber != 0 )
+        announcesNumber = 0;
 
     chicken.think();
 
@@ -1127,10 +1193,10 @@ void GT_InitGametype()
     gametype.spawnableItemsMask = 0;
     
     if ( dmAllowPickup.boolean )
-	gametype.spawnableItemsMask = ( IT_WEAPON | IT_AMMO | IT_ARMOR | IT_HEALTH | IT_POWERUP );
-	
+        gametype.spawnableItemsMask = ( IT_WEAPON | IT_AMMO | IT_ARMOR | IT_HEALTH | IT_POWERUP );
+        
     if ( ! dmAllowPowerups.boolean )
-	gametype.spawnableItemsMask &= ~( IT_POWERUP );
+        gametype.spawnableItemsMask &= ~( IT_POWERUP );
 
     if ( gametype.isInstagib )
         gametype.spawnableItemsMask &= ~uint(G_INSTAGIB_NEGATE_ITEMMASK);
@@ -1202,9 +1268,9 @@ void GT_InitGametype()
     G_RegisterCommand( "classaction1" );
     G_RegisterCommand( "classaction2" );
     
-    G_RegisterCallvote( "dm_allow_pickup", "1 or 0", "Enable or disable weapon pickup" );
-    G_RegisterCallvote( "dm_allow_powerups", "1 or 0", "Enable or disable powerup spawning" );
-    G_RegisterCallvote( "dm_powerup_drop", "1 or 0", "Enable or disable powerup drop" );
+    G_RegisterCallvote( "dm_allow_pickup", "<1 or 0>", "Enable or disable weapon pickup" );
+    G_RegisterCallvote( "dm_allow_powerups", "<1 or 0>", "Enable or disable powerup spawning" );
+    G_RegisterCallvote( "dm_powerup_drop", "<1 or 0>", "Enable or disable powerup drop" );
 
     G_Print( "Gametype '" + gametype.title + "' initialized\n" );
 }
