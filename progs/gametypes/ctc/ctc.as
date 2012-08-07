@@ -517,7 +517,7 @@ bool GT_Command( cClient @client, String &cmdString, String &argsString, int arg
         {
              if( announcesNumber < MAX_NB_ANNOUNCER_ALLOWED )
              {
-                  G_AnnouncerSound( null, prcAnnouncerPhilippe, GS_MAX_TEAMS, false, null );
+                  G_GlobalSound( CHAN_AUTO, prcAnnouncerPhilippe );
                   antiSimultaneousAnnounces = levelTime + 5505;
                   lastAnnounceTime = levelTime + 5505;
                   announcesNumber++;
@@ -539,7 +539,7 @@ bool GT_Command( cClient @client, String &cmdString, String &argsString, int arg
         {
              if( announcesNumber < MAX_NB_ANNOUNCER_ALLOWED )
              {
-                  G_AnnouncerSound( null, prcAnnouncerPrecoce, GS_MAX_TEAMS, false, null );
+                  G_GlobalSound( CHAN_AUTO, prcAnnouncerPrecoce );
                   antiSimultaneousAnnounces = levelTime + 1969;
                   lastAnnounceTime = levelTime + 1969;
                   announcesNumber++;
@@ -561,7 +561,7 @@ bool GT_Command( cClient @client, String &cmdString, String &argsString, int arg
         {
              if( announcesNumber < MAX_NB_ANNOUNCER_ALLOWED )
              {
-                  G_AnnouncerSound( null, prcAnnouncerPatron, GS_MAX_TEAMS, false, null );
+                  G_GlobalSound( CHAN_AUTO, prcAnnouncerPatron );
                   antiSimultaneousAnnounces = levelTime + 2636;
                   lastAnnounceTime = levelTime + 2636;
                   announcesNumber++;
