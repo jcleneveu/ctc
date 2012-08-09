@@ -13,6 +13,9 @@ Content
 
 The Angelscript code is located in the 'progs' directory. The other directories
 contain media files for the gametype.
+If you want to add new sounds, you MUST set the sampling rate of your .ogg files to 44.1 KHz !
+Too check if your files are ok, you can run :
+$ mediainfo *.ogg | grep -E '(Sampling rate)|(Complete name)'
 
 Install
 =======

@@ -36,13 +36,15 @@ int prcAnnouncerPhilippe;
 int prcAnnouncerPrecoce;
 int prcAnnouncerPatron;
 int announcesNumber = 0;
+bool showMessageOfScorelimitPerRun = true;
 uint lastAnnounceTime = 0;
 uint antiSimultaneousAnnounces = 0;
 
 // constantes
-const int MAX_NB_ANNOUNCER_ALLOWED = 3; // max number of crap sounds before, we consider it is spam
-const uint NB_ANNOUNCER_TIMEOUT = 10000; // timeout of spam protection
-const int RUN_SCOREINTERVAL = 3000;
+const int MAX_SCORE_PER_RUN = 10; // anti "run forever". set to a big value like 100000 to disable this feature
+const int MAX_NB_ANNOUNCER_ALLOWED = 3; // max number of crap sounds before we consider it is spam
+const uint NB_ANNOUNCER_TIMEOUT = 10000; // timeout of spam protection (in ms)
+const int RUN_SCOREINTERVAL = 3000; // interval between scoring (ie 1 point each 3 seconds) (in ms)
 const float chickenDropDistance = 2.5;
 
 // Cvars
@@ -82,6 +84,7 @@ class Chicken
     cEntity @spawnpoint;
     uint nextScore;
     int dropper;
+    int currentScoreOfRunner;
     uint droppedTime;
     int carrierTeam;
 
@@ -90,6 +93,7 @@ class Chicken
         @this.carrier = null;
         @this.chicken = null;
         this.nextScore = 0;
+        this.currentScoreOfRunner = 0;
         this.dropper = -1;
         this.droppedTime = 0;
         this.carrierTeam = -1;
@@ -151,6 +155,7 @@ class Chicken
         this.carrier.modelindex2 = modelChickenhand;
         this.nextScore = levelTime + RUN_SCOREINTERVAL;
         this.carrier.client.addAward( S_COLOR_GREEN + "KEEP THE CHICKEN!!!" );
+        this.carrier.client.addAward( S_COLOR_RED + "YOU CAN SCORE UP TO " + MAX_SCORE_PER_RUN + " POINTS" );
 
         G_AnnouncerSound( null, prcAnnouncerChickenTaken, GS_MAX_TEAMS, true, null );
         if ( this.carrierTeam == -1)
@@ -169,6 +174,12 @@ class Chicken
             }
         }
         this.carrierTeam = carrier.client.team;
+        
+        if ( this.dropper != this.carrier.playerNum )
+        {
+            this.currentScoreOfRunner = 0;
+            showMessageOfScorelimitPerRun = true;
+        }
     }
 
     void dropChicken()
@@ -205,6 +216,7 @@ class Chicken
             this.spawn();
 
         chicken.nextThink = levelTime + 15000;
+        this.dropper = -1;
         @this.carrier = null;
         @this.chicken = @chicken;
 
@@ -382,8 +394,22 @@ class Chicken
 
         if ( this.nextScore <= levelTime )
         {
-            this.carrier.client.stats.addScore( 1 );
-            G_GetTeam(this.carrier.team).stats.addScore( 1 );
+            if ( this.currentScoreOfRunner < MAX_SCORE_PER_RUN )
+            {
+                 this.carrier.client.stats.addScore( 1 );
+                 G_GetTeam(this.carrier.team).stats.addScore( 1 );
+                 this.currentScoreOfRunner++;
+            }
+            else
+            {
+                 if ( showMessageOfScorelimitPerRun )
+                 {
+                      this.carrier.client.printMessage( S_COLOR_RED + "SCORELIMIT PER RUN OF " + MAX_SCORE_PER_RUN + " POINTS REACHED\n" );
+                      this.carrier.client.printMessage( S_COLOR_WHITE + "you have to give the chicken to your partners in order to continue scoring\n" );
+                      this.carrier.client.addAward( S_COLOR_RED + "SHARE YOUR CHICKEN WITH A PARTNER !" );
+                      showMessageOfScorelimitPerRun = false;
+                 }
+            }
             this.nextScore = levelTime + RUN_SCOREINTERVAL;
         }
     }
@@ -584,12 +610,14 @@ bool GT_Command( cClient @client, String &cmdString, String &argsString, int arg
         response += "^1You don't know how to play ? Read this :\n";
         response += "\n";
         response += "^3A chicken randomly spawn in the map, to earn points, a member of your team must catch the chicken and keep it as long as possible.\n";
-        response += "^3(your team will earn 1 point every 5 seconds)\n";
+        response += "^3(your team will earn 1 point every " + ( RUN_SCOREINTERVAL / 1000 ) + " seconds)\n";
         response += "^3But ^1BEWARE^3 ! The chicken's carrier have no weapons, so if a member of your team has the chicken, DEFEND HIM !\n";
         response += "^3(You will get points for that :D)\n";
         response += "^3Conversely, if a member of the opposing team has the chicken, KILL HIM !\n";
         response += "^3(You will also get points for that :D)\n";
-        response += "^1TIPS ^3: You can launch the chicken witch ClassAction1(short distance) or ClassAction2 (long distance)\n";
+        response += "^1TIP #1 ^3: You can launch the chicken witch ClassAction1(short distance) or ClassAction2 (long distance) !\n";
+        response += "^1TIP #2 ^3: There is a scorelimit per run of " + MAX_SCORE_PER_RUN + " points ! When you have reached this scorelimit,\n";
+        response += "^3            you should consider giving your chicken to your partners !\n";
         G_PrintMsg( client.getEnt(), response );
         return true;
     }
